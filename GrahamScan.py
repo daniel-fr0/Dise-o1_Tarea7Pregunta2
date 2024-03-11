@@ -1,14 +1,18 @@
-# A Python3 program to find convex hull of a set of points. Refer 
-# https://www.geeksforgeeks.org/orientation-3-ordered-points/
-# for explanation of orientation()
+# Codigo inspirado en la implementacin de GeekforGeeks
+# https://www.geeksforgeeks.org/convex-hull-using-graham-scan/
 
 from functools import cmp_to_key
 
 # A class used to store the x and y coordinates of points
 class Point:
-	def __init__(self, x = None, y = None):
+	def __init__(self, x, y):
 		self.x = x
 		self.y = y
+	
+	def __str__(self):
+		return f'({self.x}, {self.y})'
+	def __repr__(self):
+		return f'({self.x}, {self.y})'
 
 # A global point needed for sorting points with reference
 # to the first point
@@ -57,7 +61,15 @@ def compare(p1, p2):
 			return 1
 
 # Prints convex hull of a set of n points.
-def convexHull(points, n):
+def convexHull(points, n, layers=0):
+	# if there are no points to form a convex hull
+	if n == 0:
+		return layers
+	
+	# if it's the last point
+	if n == 1:
+		print(f"Capa {layers+1}: {points[0]}")
+		return layers+1
 
 	# Find the bottommost point
 	ymin = points[0].y
@@ -80,39 +92,16 @@ def convexHull(points, n):
 	# has larger polar angle (in counterclockwise
 	# direction) than p1
 	p0 = points[0]
-	points = sorted(points, key=cmp_to_key(compare))
-
-	# If two or more points make same angle with p0,
-	# Remove all but the one that is farthest from p0
-	# Remember that, in above sorting, our criteria was
-	# to keep the farthest point at the end when more than
-	# one points have same angle.
-	m = 1 # Initialize size of modified array
-	for i in range(1, n):
-	
-		# Keep removing i while angle of i and i+1 is same
-		# with respect to p0
-		while ((i < n - 1) and
-		(orientation(p0, points[i], points[i + 1]) == 0)):
-			i += 1
-
-		points[m] = points[i]
-		m += 1 # Update size of modified array
-
-	# If modified array of points has less than 3 points,
-	# convex hull is not possible
-	if m < 3:
-		return
+	points = sorted(points[1:], key=cmp_to_key(compare))
 
 	# Create an empty stack and push first three points
 	# to it.
 	S = []
+	S.append(p0)
 	S.append(points[0])
-	S.append(points[1])
-	S.append(points[2])
 
-	# Process remaining n-3 points
-	for i in range(3, m):
+	# Process remaining n-2 points
+	for i in range(1, n-1):
 	
 		# Keep removing top while the angle formed by
 		# points next-to-top, top, and points[i] makes
@@ -124,18 +113,36 @@ def convexHull(points, n):
 
 	# Now stack has the output points,
 	# print contents of stack
-	while S:
+	print(f'Capa {layers+1}:', end=' ')
+	print(S[0], end=' ')
+	while len(S) > 1:
 		p = S[-1]
-		print("(" + str(p.x) + ", " + str(p.y) + ")")
+		print(p, end=' ')
+		# remove from list of points
+		points.remove(p)
 		S.pop()
+	print()
+
+	# count the remaining layers
+	return convexHull(points, len(points), layers+1)
 
 # Driver Code
-input_points = [(0, 3), (1, 1), (2, 2), (4, 4),
-				(0, 0), (1, 2), (3, 1), (3, 3)]
+input_points = [
+	(0,9), 													        (9,9),
+		    (1,8), 											  (8,8),
+		    	   (2,7), 							   (7,7),
+		    	   		  (3,6), 	    	   (6,6),
+		    	   		  	     (4,5), (5,5),
+		    	   		  	     (4,4), (5,4),
+		    	   		  (3,3), 			   (6,3),
+		    	   (2,2), 							 (7,2),
+		    (1,1), 											 (8,1),
+	(0,0), 														    (9,0)
+]
 points = []
 for point in input_points:
 	points.append(Point(point[0], point[1]))
-n = len(points)
-convexHull(points, n)
 
-# This code is contributed by Kevin Joshi
+n = len(points)
+l = convexHull(points, n)
+print(f'Numero de capas: {l}')
